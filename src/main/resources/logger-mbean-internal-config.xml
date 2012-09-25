@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+
+	<context:mbean-server/>
+    <context:property-placeholder/>
+	
+	<bean id="exporter" class="org.springframework.jmx.export.annotation.AnnotationMBeanExporter">
+		<property name="defaultDomain" value="spring.application"/>
+		<property name="namingStrategy">
+			<bean class="com.goSmarter.logging.jmx.CustomMetadataNamingStrategy">
+				<constructor-arg>
+					<bean class="org.springframework.jmx.export.annotation.AnnotationJmxAttributeSource"/>
+				</constructor-arg>
+				<property name="objectNameStaticProperties">
+					<map>
+						<entry key="application" value="${application.configuration.name:NO_APPLICATION_NAME}"/>
+					</map>
+				</property>
+			</bean>
+		</property>
+		<property name="registrationBehaviorName" value="REGISTRATION_IGNORE_EXISTING"/>
+	</bean>
+
+	<bean id="loggerManager" class="com.goSmarter.logging.jmx.LoggerManager" />
+		
+</beans>

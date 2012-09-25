@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-flow="http://www.springframework.org/schema/integration/flow"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:int-jms="http://www.springframework.org/schema/integration/jms"
+	xsi:schemaLocation="http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/integration/jms http://www.springframework.org/schema/integration/jms/spring-integration-jms.xsd
+		http://www.springframework.org/schema/integration/flow http://www.springframework.org/schema/integration/flow/spring-integration-flow.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+	<description><![CDATA[
+    This configuration file contains the JMS related details.
+   ]]></description>
+
+	<util:properties id="qEnvironment">
+		<prop key="java.naming.factory.initial">org.apache.activemq.jndi.ActiveMQInitialContextFactory</prop> 
+		<prop key="java.naming.provider.url">tcp://localhost:61616</prop> 
+    </util:properties>
+
+	<jee:jndi-lookup id="connectionFactory"
+		jndi-name="ConnectionFactory"
+		environment-ref="qEnvironment" />
+
+	<bean id="jmsTransactionManager"
+		class="org.springframework.jms.connection.JmsTransactionManager">
+		<property name="connectionFactory" ref="connectionFactory" />
+	</bean>
+
+	<bean id="queueContainer"
+		class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+		<property name="connectionFactory" ref="connectionFactory" />
+		<property name="destinationName" value="MyQueue" />
+		<property name="transactionManager" ref="jmsTransactionManager" />
+		<property name="maxConcurrentConsumers"
+			value="5" />
+		<property name="sessionTransacted" value="true" />
+		<property name="maxMessagesPerTask" value="10" />
+		<property name="receiveTimeout" value="30000" />
+		<property name="cacheLevel">
+			<util:constant
+				static-field="org.springframework.jms.listener.DefaultMessageListenerContainer.CACHE_CONSUMER" />
+		</property>
+	</bean>
+
+	<int-jms:message-driven-channel-adapter
+		id="messagedrivenchanneladapter" error-channel="errorChannel"
+		channel="integration.inbound" container="queueContainer" />
+
+	<!-- JMX Settings -->
+	<bean id="queue.exporter" class="org.springframework.jmx.export.MBeanExporter">
+		<property name="beans">
+			<map>
+				<entry
+					key="spring.application:type=JMSContainer,name=testQueueContainer"
+					value-ref="queueContainer" />
+			</map>
+		</property>
+
+		 <property name="assembler">
+	      <bean class="org.springframework.jmx.export.assembler.InterfaceBasedMBeanInfoAssembler">
+	        <property name="managedInterfaces">
+	          <value>org.springframework.context.Lifecycle</value>
+	        </property>
+	      </bean>
+	    </property>
+	</bean>
+
+</beans>
