@@ -11,9 +11,6 @@ public class ServiceActivator {
 
 	public void logXml(GenericMessage<?> msg) throws Exception {
 
-		logger.debug("### INSIDE SEND TO TRADESPHERE ###");
-		String payload = (String) msg.getPayload();
-		logger.debug("### PAYLOAD TO TRADESPHERE ###" + payload);
-		
+		logger.debug("### PAYLOAD ###" + msg.getPayload());
 	}
 }
